@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GoalLevel {
+  LIFE
+  TEN_YEARS
+  FIVE_YEARS
+  ONE_YEAR
+  QUARTER
+  MONTH
+  WEEK
+  DAY
+}
+
+enum GoalStatus {
+  ACTIVE
+  DONE
+  PAUSED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+  CANCELED
+}
+
+model User {
+  id    String  @id @default(cuid())
+  email String? @unique
+  name  String?
+  image String?
+
+  // Google OIDC sub (유저 고유 ID)
+  googleSub String @unique
+
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  goals Goal[]
+  tasks Task[]
+}
+
+model Goal {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  level       GoalLevel
+  status      GoalStatus @default(ACTIVE)
+
+  // 트리 구조(상위 목표)
+  parentId String?
+  parent   Goal?   @relation("GoalTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Goal[]  @relation("GoalTree")
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks Task[]
+
+  @@index([userId])
+  @@index([parentId])
+  @@index([userId, level])
+}
+
+model Task {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  goalId String?
+  goal   Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  title  String
+  memo   String?
+  status TaskStatus @default(TODO)
+
+  // 하루 플래너용
+  date     DateTime
+  startMin Int?
+  endMin   Int?
+
+  sortOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+  @@index([goalId])
+}
