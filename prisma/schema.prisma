@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -10,101 +9,153 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum GoalLevel {
-  LIFE
-  TEN_YEARS
-  FIVE_YEARS
-  ONE_YEAR
-  QUARTER
-  MONTH
-  WEEK
-  DAY
-}
-
-enum GoalStatus {
-  ACTIVE
-  DONE
-  PAUSED
-  ARCHIVED
-}
-
-enum TaskStatus {
-  TODO
-  DOING
-  DONE
-  CANCELED
-}
+/**
+* Auth.js (NextAuth) 기본 테이블 (Prisma Adapter 정석 형태)
+* - DB Session 전략 + 다중 OAuth 확장 대비
+*/
 
 model User {
-  id    String  @id @default(cuid())
-  email String? @unique
-  name  String?
-  image String?
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
 
-  // Google OIDC sub (유저 고유 ID)
-  googleSub String @unique
+  // relations (Auth.js)
+  accounts Account[]
+  sessions Session[]
 
-  isActive    Boolean   @default(true)
-  lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  goals Goal[]
-  tasks Task[]
-}
-
-model Goal {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  title       String
-  description String?
-  level       GoalLevel
-  status      GoalStatus @default(ACTIVE)
-
-  // 트리 구조(상위 목표)
-  parentId String?
-  parent   Goal?   @relation("GoalTree", fields: [parentId], references: [id], onDelete: SetNull)
-  children Goal[]  @relation("GoalTree")
-
-  startDate DateTime?
-  endDate   DateTime?
-
-  sortOrder Int @default(0)
+  // app relations
+  timeBlocks      TimeBlock[]
+  timeRecurrences TimeBlockRecurrence[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  tasks Task[]
-
-  @@index([userId])
-  @@index([parentId])
-  @@index([userId, level])
 }
 
-model Task {
+model Account {
+  id                String @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+
+  refresh_token String?
+  access_token  String?
+  expires_at    Int?
+  token_type    String?
+  scope         String?
+  id_token      String?
+  session_state String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/**
+* Planner - TimeBox (하루 단위 타임블록)
+* - date는 DATE로 저장 (시간대 이슈 방지)
+* - startMin/endMin은 "00:00 기준 분" 정수
+*/
+
+model TimeBlock {
   id     String @id @default(cuid())
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  goalId String?
-  goal   Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  // 날짜만 저장 (Postgres DATE)
+  date DateTime @db.Date
 
-  title  String
-  memo   String?
-  status TaskStatus @default(TODO)
+  startMin Int
+  endMin   Int
 
-  // 하루 플래너용
-  date     DateTime
-  startMin Int?
-  endMin   Int?
-
-  sortOrder Int @default(0)
+  title String
+  color String? // "#RRGGBB"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId, date])
-  @@index([goalId])
+  @@index([userId, date, startMin])
+}
+
+/**
+* 반복 규칙
+* - daysOfWeek: Int[]  (0=일, 1=월 ... 6=토)
+* - startDate/untilDate도 DATE로 저장
+*/
+
+model TimeBlockRecurrence {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  startMin Int
+  endMin   Int
+
+  // 예: 월/수/금 => [1,3,5]
+  daysOfWeek Int[]
+
+  startDate DateTime  @db.Date
+  untilDate DateTime? @db.Date
+
+  title String
+  color String?
+
+  exceptions TimeBlockRecurrenceException[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, startDate])
+}
+
+enum RecurrenceExceptionType {
+  SKIP
+  MODIFY
+}
+
+model TimeBlockRecurrenceException {
+  id String @id @default(cuid())
+
+  recurrenceId String
+  recurrence   TimeBlockRecurrence @relation(fields: [recurrenceId], references: [id], onDelete: Cascade)
+
+  // 예외가 적용되는 날짜 (DATE)
+  date DateTime @db.Date
+
+  type RecurrenceExceptionType
+
+  // MODIFY일 때만 의미 있음
+  overrideStartMin Int?
+  overrideEndMin   Int?
+  overrideTitle    String?
+  overrideColor    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([recurrenceId, date])
+  @@index([recurrenceId])
 }
