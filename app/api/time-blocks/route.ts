@@ -7,6 +7,11 @@ function isValidDateString(v: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(v);
 }
 
+function isHexColor(v: string) {
+  return /^#[0-9A-Fa-f]{6}$/.test(v);
+}
+
+// GET /api/time-blocks?date=YYYY-MM-DD
 export async function GET(req: Request) {
   const session = await auth();
 
@@ -37,4 +42,93 @@ export async function GET(req: Request) {
   });
 
   return NextResponse.json({ items }, { status: 200 });
+}
+
+type CreateTimeBlockBody = {
+  date: string; // "YYYY-MM-DD"
+  startMin: number; // 0~1439
+  endMin: number; // 1~1440
+  title: string;
+  color?: string | null; // "#RRGGBB"
+};
+
+// POST /api/time-blocks
+export async function POST(req: Request) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: CreateTimeBlockBody;
+  try {
+    body = (await req.json()) as CreateTimeBlockBody;
+  } catch {
+    return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const { date, startMin, endMin, title, color } = body;
+
+  // --- validation ---
+  if (!date || !isValidDateString(date)) {
+    return NextResponse.json(
+      { message: "date is required (YYYY-MM-DD)" },
+      { status: 400 }
+    );
+  }
+
+  if (!Number.isInteger(startMin) || !Number.isInteger(endMin)) {
+    return NextResponse.json(
+      { message: "startMin/endMin must be integers" },
+      { status: 400 }
+    );
+  }
+
+  if (startMin < 0 || startMin > 1439 || endMin < 1 || endMin > 1440) {
+    return NextResponse.json(
+      { message: "startMin must be 0~1439 and endMin must be 1~1440" },
+      { status: 400 }
+    );
+  }
+
+  if (startMin >= endMin) {
+    return NextResponse.json(
+      { message: "startMin must be less than endMin" },
+      { status: 400 }
+    );
+  }
+
+  if (typeof title !== "string" || title.trim().length === 0) {
+    return NextResponse.json({ message: "title is required" }, { status: 400 });
+  }
+
+  if (title.trim().length > 100) {
+    return NextResponse.json(
+      { message: "title must be 100 characters or less" },
+      { status: 400 }
+    );
+  }
+
+  if (color != null && color !== "" && !isHexColor(color)) {
+    return NextResponse.json(
+      { message: "color must be a hex string like #RRGGBB" },
+      { status: 400 }
+    );
+  }
+
+  // Prisma @db.Date 컬럼: 날짜만 의미 있게 저장/비교됨
+  const dateObj = new Date(date);
+
+  const created = await prisma.timeBlock.create({
+    data: {
+      userId: session.user.id,
+      date: dateObj,
+      startMin,
+      endMin,
+      title: title.trim(),
+      color: color && color !== "" ? color : null,
+    },
+  });
+
+  return NextResponse.json({ item: created }, { status: 201 });
 }
