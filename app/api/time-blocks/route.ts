@@ -7,41 +7,69 @@ function isValidDateString(v: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(v);
 }
 
-function isHexColor(v: string) {
-  return /^#[0-9A-Fa-f]{6}$/.test(v);
+function toDateOnly(dateStr: string) {
+  // "YYYY-MM-DD" -> Date
+  // DB가 @db.Date라 날짜만 의미 있음
+  return new Date(dateStr);
 }
 
-// GET /api/time-blocks?date=YYYY-MM-DD
+// GET /api/time-blocks
 export async function GET(req: Request) {
   const session = await auth();
-
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
-  const dateStr = searchParams.get("date"); // "2025-12-22"
 
-  if (!dateStr || !isValidDateString(dateStr)) {
-    return NextResponse.json(
-      { message: "date query is required (YYYY-MM-DD)" },
-      { status: 400 }
-    );
+  const date = searchParams.get("date");
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
+
+  // ✅ 1) 단일 날짜 조회
+  if (date) {
+    if (!isValidDateString(date)) {
+      return NextResponse.json(
+        { message: "date must be YYYY-MM-DD" },
+        { status: 400 }
+      );
+    }
+
+    const items = await prisma.timeBlock.findMany({
+      where: { userId: session.user.id, date: toDateOnly(date) },
+      orderBy: { startMin: "asc" },
+    });
+
+    return NextResponse.json({ items }, { status: 200 });
   }
 
-  // Prisma @db.Date 필드라 "날짜만" 들어가면 됨
-  // Date("YYYY-MM-DD")는 UTC 기준으로 만들어지지만, DATE 컬럼이라 결국 date-only로 저장/비교됨.
-  const date = new Date(dateStr);
+  // ✅ 2) 기간 조회 (주간용)
+  if (startDate && endDate) {
+    if (!isValidDateString(startDate) || !isValidDateString(endDate)) {
+      return NextResponse.json(
+        { message: "startDate/endDate must be YYYY-MM-DD" },
+        { status: 400 }
+      );
+    }
 
-  const items = await prisma.timeBlock.findMany({
-    where: {
-      userId: session.user.id,
-      date,
-    },
-    orderBy: { startMin: "asc" },
-  });
+    const items = await prisma.timeBlock.findMany({
+      where: {
+        userId: session.user.id,
+        date: {
+          gte: toDateOnly(startDate),
+          lte: toDateOnly(endDate),
+        },
+      },
+      orderBy: [{ date: "asc" }, { startMin: "asc" }],
+    });
 
-  return NextResponse.json({ items }, { status: 200 });
+    return NextResponse.json({ items }, { status: 200 });
+  }
+
+  return NextResponse.json(
+    { message: "Provide either date=YYYY-MM-DD or startDate/endDate" },
+    { status: 400 }
+  );
 }
 
 type CreateTimeBlockBody = {
@@ -51,6 +79,10 @@ type CreateTimeBlockBody = {
   title: string;
   color?: string | null; // "#RRGGBB"
 };
+
+function isHexColor(v: string) {
+  return /^#[0-9A-Fa-f]{6}$/.test(v);
+}
 
 // POST /api/time-blocks
 export async function POST(req: Request) {
