@@ -1,24 +1,13 @@
-import { auth } from "@/auth"; // 너가 NextAuth/Auth.js 설정한 auth export에 맞게
+import { isValidDateOnlyString, toDateOnly } from "@/lib/dateOnly";
 import { prisma } from "@/lib/prisma"; // 너 프로젝트 경로에 맞게
+import { requireUserId } from "@/lib/requireUserId";
+import { isHexColor } from "@/lib/validators";
 import { NextResponse } from "next/server";
-
-function isValidDateString(v: string) {
-  // YYYY-MM-DD
-  return /^\d{4}-\d{2}-\d{2}$/.test(v);
-}
-
-function toDateOnly(dateStr: string) {
-  // "YYYY-MM-DD" -> Date
-  // DB가 @db.Date라 날짜만 의미 있음
-  return new Date(dateStr);
-}
 
 // GET /api/time-blocks
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const guard = await requireUserId();
+  if (!guard.ok) return guard.response;
 
   const { searchParams } = new URL(req.url);
 
@@ -28,7 +17,7 @@ export async function GET(req: Request) {
 
   // ✅ 1) 단일 날짜 조회
   if (date) {
-    if (!isValidDateString(date)) {
+    if (!isValidDateOnlyString(date)) {
       return NextResponse.json(
         { message: "date must be YYYY-MM-DD" },
         { status: 400 }
@@ -36,7 +25,7 @@ export async function GET(req: Request) {
     }
 
     const items = await prisma.timeBlock.findMany({
-      where: { userId: session.user.id, date: toDateOnly(date) },
+      where: { userId: guard.userId, date: toDateOnly(date) },
       orderBy: { startMin: "asc" },
     });
 
@@ -45,7 +34,7 @@ export async function GET(req: Request) {
 
   // ✅ 2) 기간 조회 (주간용)
   if (startDate && endDate) {
-    if (!isValidDateString(startDate) || !isValidDateString(endDate)) {
+    if (!isValidDateOnlyString(startDate) || !isValidDateOnlyString(endDate)) {
       return NextResponse.json(
         { message: "startDate/endDate must be YYYY-MM-DD" },
         { status: 400 }
@@ -54,7 +43,7 @@ export async function GET(req: Request) {
 
     const items = await prisma.timeBlock.findMany({
       where: {
-        userId: session.user.id,
+        userId: guard.userId,
         date: {
           gte: toDateOnly(startDate),
           lte: toDateOnly(endDate),
@@ -80,17 +69,10 @@ type CreateTimeBlockBody = {
   color?: string | null; // "#RRGGBB"
 };
 
-function isHexColor(v: string) {
-  return /^#[0-9A-Fa-f]{6}$/.test(v);
-}
-
 // POST /api/time-blocks
 export async function POST(req: Request) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const guard = await requireUserId();
+  if (!guard.ok) return guard.response;
 
   let body: CreateTimeBlockBody;
   try {
@@ -102,7 +84,7 @@ export async function POST(req: Request) {
   const { date, startMin, endMin, title, color } = body;
 
   // --- validation ---
-  if (!date || !isValidDateString(date)) {
+  if (!date || !isValidDateOnlyString(date)) {
     return NextResponse.json(
       { message: "date is required (YYYY-MM-DD)" },
       { status: 400 }
@@ -149,11 +131,11 @@ export async function POST(req: Request) {
   }
 
   // Prisma @db.Date 컬럼: 날짜만 의미 있게 저장/비교됨
-  const dateObj = new Date(date);
+  const dateObj = toDateOnly(date);
 
   const created = await prisma.timeBlock.create({
     data: {
-      userId: session.user.id,
+      userId: guard.userId,
       date: dateObj,
       startMin,
       endMin,

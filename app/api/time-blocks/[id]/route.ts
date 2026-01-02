@@ -1,5 +1,7 @@
-import { auth } from "@/auth";
+import { isValidDateOnlyString, toDateOnly } from "@/lib/dateOnly";
 import { prisma } from "@/lib/prisma";
+import { requireUserId } from "@/lib/requireUserId";
+import { isHexColor } from "@/lib/validators";
 import { NextResponse } from "next/server";
 
 type Params = {
@@ -9,11 +11,8 @@ type Params = {
 };
 
 export async function DELETE(_: Request, { params }: Params) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const guard = await requireUserId();
+  if (!guard.ok) return guard.response;
 
   const { id } = params;
 
@@ -21,7 +20,7 @@ export async function DELETE(_: Request, { params }: Params) {
   const timeBlock = await prisma.timeBlock.findFirst({
     where: {
       id,
-      userId: session.user.id,
+      userId: guard.userId,
     },
   });
 
@@ -42,14 +41,6 @@ export async function DELETE(_: Request, { params }: Params) {
   return new NextResponse(null, { status: 204 });
 }
 
-function isValidDateString(v: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(v);
-}
-
-function isHexColor(v: string) {
-  return /^#[0-9A-Fa-f]{6}$/.test(v);
-}
-
 type PatchTimeBlockBody = Partial<{
   date: string; // "YYYY-MM-DD"
   startMin: number;
@@ -60,11 +51,8 @@ type PatchTimeBlockBody = Partial<{
 
 // PATCH /api/time-blocks/[id]
 export async function PATCH(req: Request, { params }: Params) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
+  const guard = await requireUserId();
+  if (!guard.ok) return guard.response;
 
   const { id } = params;
 
@@ -77,7 +65,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   // ✅ 먼저 "내 것"인지 확인
   const existing = await prisma.timeBlock.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: guard.userId },
   });
 
   if (!existing) {
@@ -91,13 +79,13 @@ export async function PATCH(req: Request, { params }: Params) {
   const data: Record<string, any> = {};
 
   if (body.date !== undefined) {
-    if (!body.date || !isValidDateString(body.date)) {
+    if (!body.date || !isValidDateOnlyString(body.date)) {
       return NextResponse.json(
         { message: "date must be YYYY-MM-DD" },
         { status: 400 }
       );
     }
-    data.date = new Date(body.date);
+    data.date = toDateOnly(body.date);
   }
 
   if (body.title !== undefined) {
