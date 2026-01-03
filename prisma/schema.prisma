@@ -147,12 +147,6 @@ model TimeBlockRecurrenceException {
 
   type RecurrenceExceptionType
 
-  // MODIFY일 때만 의미 있음
-  overrideStartMin Int?
-  overrideEndMin   Int?
-  overrideTitle    String?
-  overrideColor    String?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
