@@ -1,22 +1,10 @@
 import { isValidDateOnlyString, toDateOnly } from "@/lib/dateOnly";
 import { prisma } from "@/lib/prisma";
 import { requireUserId } from "@/lib/requireUserId";
-import { isHexColor } from "@/lib/validators";
+import { isHexColor, isValidDaysOfWeek } from "@/lib/validators";
 import { NextResponse } from "next/server";
 
 type Params = { params: { id: string } };
-
-function isValidDaysOfWeek(v: unknown): v is number[] {
-  if (!Array.isArray(v) || v.length === 0) return false;
-  const seen = new Set<number>();
-  for (const x of v) {
-    if (!Number.isInteger(x)) return false;
-    if (x < 0 || x > 6) return false;
-    if (seen.has(x)) return false;
-    seen.add(x);
-  }
-  return true;
-}
 
 type PatchRecurrenceBody = Partial<{
   startMin: number;
