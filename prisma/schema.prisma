@@ -131,11 +131,6 @@ model TimeBlockRecurrence {
   @@index([userId, startDate])
 }
 
-enum RecurrenceExceptionType {
-  SKIP
-  MODIFY
-}
-
 model TimeBlockRecurrenceException {
   id String @id @default(cuid())
 
@@ -144,8 +139,6 @@ model TimeBlockRecurrenceException {
 
   // 예외가 적용되는 날짜 (DATE)
   date DateTime @db.Date
-
-  type RecurrenceExceptionType
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

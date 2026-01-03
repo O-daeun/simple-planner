@@ -122,12 +122,7 @@ Prisma Adapter 정석 형태로 구성되어 있으며, `session.strategy = "dat
 
 ## 5️⃣ 반복 예외(TimeBlockRecurrenceException)
 
-반복 일정에서 특정 날짜를 “건너뛰기(SKIP)” 하거나 “해당 날짜만 수정(MODIFY)” 하는 예외 모델이다.
-
-### `RecurrenceExceptionType` (enum)
-
-- `SKIP`
-- `MODIFY`
+반복 일정에서 특정 날짜를 **건너뛰기(SKIP)** 하기 위한 예외 모델이다.
 
 ### `TimeBlockRecurrenceException`
 
@@ -135,13 +130,14 @@ Prisma Adapter 정석 형태로 구성되어 있으며, `session.strategy = "dat
 - **FK**: `recurrenceId` → `TimeBlockRecurrence.id` (onDelete: Cascade)
 - **Columns**
   - `date`: DateTime `@db.Date` (예외 적용 날짜)
-  - `type`: `RecurrenceExceptionType`
-  - `overrideStartMin`, `overrideEndMin`, `overrideTitle`, `overrideColor` (모두 optional)
-    - `type = MODIFY`인 경우에만 의미가 있다.
 - **Constraints**
   - `@@unique([recurrenceId, date])` : 같은 반복 규칙에서 같은 날짜 예외는 1개만
 - **Index**
   - `@@index([recurrenceId])`
+
+### 동작 의미(의도)
+
+- 해당 `(recurrenceId, date)` 조합의 row가 존재하면, 그 날짜의 반복 일정은 **스킵**된 것으로 본다.
 
 ---
 
