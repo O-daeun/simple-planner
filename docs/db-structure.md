@@ -9,7 +9,7 @@
 
 ### 데이터베이스
 
-- DB: **PostgreSQL**
+- DB: **PostgreSQL (Neon)**
 - Prisma datasource: `provider = "postgresql"`, `DATABASE_URL` 사용
 
 ### 날짜 저장 규칙 (중요)
