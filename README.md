@@ -8,6 +8,7 @@
 
 - `docs/ux-planning.md`: 주간 시간표 UI/UX 기획(더블클릭 편집, 색상, 반복/삭제 플로우)
 - `docs/backend-api.md`: Next.js Route Handlers 기반 백엔드 API 스펙(인증/TimeBlock/Recurrence/예외)
+- `docs/env.md`: 환경 변수(.env) 설정 가이드(로컬/배포 체크리스트)
 - `docs/db-structure.md`: Prisma 스키마 기준 DB 구조/규칙 정리(Postgres DATE, startMin/endMin 규칙 등)
 - `docs/neon.md`: Neon(Postgres) 사용/역할/연결 방법 정리
 
@@ -31,8 +32,6 @@
 ### DB/ORM
 
 - **PostgreSQL (Neon)**: Neon에서 제공하는 Managed Postgres 사용
-- Neon 역할 요약: DB 호스팅(인프라) / `DATABASE_URL` 제공 / 운영(백업·모니터링 등) / DB 브랜치
-- 자세한 내용: `docs/neon.md`
 - **Prisma**: 스키마/마이그레이션/쿼리(Prisma Client)
 - **@auth/prisma-adapter**: Auth.js/NextAuth와 Prisma 테이블 연동
 
@@ -53,6 +52,9 @@
 ## 환경 변수(.env)
 
 로컬에서 실행하려면 아래 환경 변수가 필요합니다.
+
+- 자세한 가이드: `docs/env.md`
+- 복붙 템플릿: `docs/env.example`
 
 - **DB (Neon Postgres)**
   - `DATABASE_URL`: Neon에서 발급받은 Postgres 연결 문자열
