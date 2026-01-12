@@ -15,6 +15,7 @@ export default function LoginButton({ isAuthenticated }: LoginButtonProps) {
           ? signOut({ redirectTo: ROUTES.login })
           : signIn("google", { redirectTo: ROUTES.plan.day })
       }
+      className="cursor-pointer rounded-md border border-gray-400 px-3 py-1 text-xs"
     >
       {isAuthenticated ? "로그아웃" : "구글로 로그인"}
     </button>

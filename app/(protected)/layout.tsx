@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { ROUTES } from "@/lib/routes";
 import { redirect } from "next/navigation";
+import Header from "./_components/Header";
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -16,5 +17,10 @@ export default async function ProtectedLayout({
     redirect(ROUTES.login);
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
 }
