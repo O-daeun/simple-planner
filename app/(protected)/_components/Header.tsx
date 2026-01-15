@@ -28,8 +28,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-400 bg-white p-4">
       <div className="flex items-center gap-5">
-        <h1 className="font-semibold">Simple Planner</h1>
-        <nav className="flex items-center gap-2 text-sm">
+        <h1 className="text-xl font-semibold">Simple Planner</h1>
+        <nav className="flex items-center gap-2 text-base">
           <NavLink href={ROUTES.plan.day}>Daily</NavLink>
           <NavLink href={ROUTES.plan.week}>Weekly</NavLink>
         </nav>

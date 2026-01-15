@@ -20,7 +20,7 @@ export default async function ProtectedLayout({
   return (
     <>
       <Header />
-      {children}
+      <div className="p-4">{children}</div>
     </>
   );
 }
