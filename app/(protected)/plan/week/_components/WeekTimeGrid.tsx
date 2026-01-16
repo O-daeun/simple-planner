@@ -1,7 +1,11 @@
 "use client";
 
-import { getKstTodayDateValue } from "@/lib/kst";
-import { addDays, format, startOfWeek } from "date-fns";
+import {
+  addDaysToKstYmd,
+  getThisWeekStartYmd,
+  kstYmdToDateValue,
+} from "@/lib/week";
+import { addDays, format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 
 type TimeBlock = {
@@ -17,17 +21,24 @@ const HOUR_H = 48; // 1시간 높이(px). 취향대로 조절
 const MIN_PX = HOUR_H / 60;
 const TIME_COL_W = 56;
 
-export default function WeekTimeGrid() {
+type Props = {
+  weekStartYmd: string; // YYYY-MM-DD (월요일)
+};
+
+export default function WeekTimeGrid({ weekStartYmd }: Props) {
   const [items, setItems] = useState<TimeBlock[]>([]);
 
   const days = useMemo(() => {
-    const todayKst = getKstTodayDateValue();
-    const start = startOfWeek(todayKst, { weekStartsOn: 1 }); // 월요일 시작(원하면 0=일)
+    const safeWeekStart = weekStartYmd || getThisWeekStartYmd();
+    const start = kstYmdToDateValue(safeWeekStart);
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, []);
+  }, [weekStartYmd]);
 
-  const startDate = useMemo(() => format(days[0], "yyyy-MM-dd"), [days]);
-  const endDate = useMemo(() => format(days[6], "yyyy-MM-dd"), [days]);
+  const startDate = useMemo(
+    () => weekStartYmd || getThisWeekStartYmd(),
+    [weekStartYmd]
+  );
+  const endDate = useMemo(() => addDaysToKstYmd(startDate, 6), [startDate]);
 
   useEffect(() => {
     const run = async () => {
