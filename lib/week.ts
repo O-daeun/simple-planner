@@ -33,8 +33,8 @@ export function getThisWeekStartYmd(now = new Date()) {
 export function getWeekRangeLabel(weekStartYmd: string) {
   const start = kstYmdToDateValue(weekStartYmd);
   const end = addDays(start, 6);
-  const startLabel = formatInTimeZone(start, KST, "yyyy.MM.dd");
-  const endLabel = formatInTimeZone(end, KST, "yyyy.MM.dd");
+  const startLabel = formatInTimeZone(start, KST, "M월 d일");
+  const endLabel = formatInTimeZone(end, KST, "M월 d일");
   return `${startLabel} ~ ${endLabel}`;
 }
 
