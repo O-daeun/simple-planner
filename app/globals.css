@@ -46,14 +46,20 @@
 
 :root {
   --radius: 0.625rem;
+  /* 메인 색상 변수 */
+  --main-color-pink: oklch(0.849 0.081 35.2); /* rgb(249, 192, 171) */
+  --main-color-beige: oklch(0.9 0.078 85.4); /* rgb(244, 224, 175) - 배경색 */
+  --main-color-green: oklch(0.822 0.118 134.9); /* rgb(168, 205, 137) */
+  --main-color-dark-green: oklch(0.402 0.116 135.2); /* rgb(53, 95, 46) */
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: var(--main-color-pink);
+  --primary-foreground: var(--main-color-foreground);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.967 0.001 286.375);
@@ -80,14 +86,20 @@
 }
 
 .dark {
+  /* 다크 모드 메인 색상 변수 */
+  --main-color-pink: oklch(0.849 0.081 35.2);
+  --main-color-beige: oklch(0.9 0.078 85.4);
+  --main-color-green: oklch(0.822 0.118 134.9);
+  --main-color-dark-green: oklch(0.402 0.116 135.2);
+
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
+  --primary: var(--main-color-pink);
+  --primary-foreground: var(--main-color-foreground);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.274 0.006 286.033);
