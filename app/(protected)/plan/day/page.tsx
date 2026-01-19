@@ -1,3 +1,3 @@
 export default function DayPage() {
-  return <div>DayPage</div>;
+  return <div>day page</div>;
 }

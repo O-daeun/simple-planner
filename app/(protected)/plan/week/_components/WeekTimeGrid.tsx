@@ -1,32 +1,23 @@
 "use client";
 
 import {
-  addDaysToKstYmd,
   getThisWeekStartYmd,
   kstYmdToDateValue,
 } from "@/lib/week";
 import { addDays, format } from "date-fns";
-import { useEffect, useMemo, useState } from "react";
-
-type TimeBlock = {
-  id: string;
-  date: string; // "YYYY-MM-DD" (API에서 Date가 문자열로 내려온다고 가정)
-  startMin: number;
-  endMin: number;
-  title: string;
-  color?: string | null;
-};
-
-const HOUR_H = 48; // 1시간 높이(px). 취향대로 조절
-const MIN_PX = HOUR_H / 60;
-const TIME_COL_W = 56;
+import { useMemo, useState } from "react";
+import { HOUR_H, MIN_PX, TIME_COL_W } from "./constants";
+import { DayColumn } from "./DayColumn";
+import type { EditingBlock, TimeBlock } from "./types";
+import { useTimeBlocks } from "./useTimeBlocks";
 
 type Props = {
   weekStartYmd: string; // YYYY-MM-DD (월요일)
 };
 
 export default function WeekTimeGrid({ weekStartYmd }: Props) {
-  const [items, setItems] = useState<TimeBlock[]>([]);
+  const { items, createBlock, updateBlock } = useTimeBlocks(weekStartYmd);
+  const [editingBlock, setEditingBlock] = useState<EditingBlock | null>(null);
 
   const days = useMemo(() => {
     const safeWeekStart = weekStartYmd || getThisWeekStartYmd();
@@ -34,24 +25,76 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
   }, [weekStartYmd]);
 
-  const startDate = useMemo(
-    () => weekStartYmd || getThisWeekStartYmd(),
-    [weekStartYmd]
-  );
-  const endDate = useMemo(() => addDaysToKstYmd(startDate, 6), [startDate]);
+  // 빈 셀 더블클릭: 클릭 위치에서 시간 계산하여 새 블록 생성
+  const handleEmptyCellDoubleClick = (
+    e: React.MouseEvent<HTMLDivElement>,
+    date: string
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+    const clickedMin = Math.max(0, Math.min(1439, Math.round(relativeY / MIN_PX)));
+    const startMin = clickedMin;
+    const endMin = Math.min(1440, clickedMin + 60); // 기본 1시간
 
-  useEffect(() => {
-    const run = async () => {
-      const res = await fetch(
-        `/api/time-blocks?startDate=${startDate}&endDate=${endDate}`,
-        { cache: "no-store" }
-      );
-      if (!res.ok) return;
-      const data = await res.json();
-      setItems(data.items ?? []);
-    };
-    run();
-  }, [startDate, endDate]);
+    setEditingBlock({
+      id: null,
+      date,
+      startMin,
+      endMin,
+      title: "",
+      color: null,
+    });
+  };
+
+  // 기존 블록 더블클릭: 편집 모드 진입
+  const handleBlockDoubleClick = (block: TimeBlock) => {
+    setEditingBlock({
+      id: block.id,
+      date: block.date,
+      startMin: block.startMin,
+      endMin: block.endMin,
+      title: block.title,
+      color: block.color ?? null,
+    });
+  };
+
+  // 편집 중인 블록의 제목 변경
+  const handleEditingTitleChange = (title: string) => {
+    if (editingBlock) {
+      setEditingBlock({ ...editingBlock, title });
+    }
+  };
+
+  // 저장
+  const handleEditingSave = async (title: string) => {
+    if (!editingBlock) return;
+
+    try {
+      if (editingBlock.id === null) {
+        // 새 블록 생성
+        await createBlock({
+          date: editingBlock.date,
+          startMin: editingBlock.startMin,
+          endMin: editingBlock.endMin,
+          title,
+          color: editingBlock.color,
+        });
+      } else {
+        // 기존 블록 수정
+        await updateBlock(editingBlock.id, { title });
+      }
+      setEditingBlock(null);
+    } catch (error) {
+      console.error("Failed to save block:", error);
+      // 에러 발생 시에도 편집 모드는 종료 (사용자 경험)
+      setEditingBlock(null);
+    }
+  };
+
+  // 취소
+  const handleEditingCancel = () => {
+    setEditingBlock(null);
+  };
 
   return (
     <div className="overflow-hidden rounded-md border">
@@ -99,36 +142,20 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
         {/* 7일 컬럼들 */}
         {days.map((d) => {
           const ymd = format(d, "yyyy-MM-dd");
-          const dayItems = items.filter((it) => it.date?.startsWith(ymd));
+          const dayBlocks = items.filter((it) => it.date?.startsWith(ymd));
 
           return (
-            <div key={ymd} className="relative border-r last:border-r-0">
-              {/* 시간 가로줄 */}
-              {Array.from({ length: 24 }, (_, h) => (
-                <div key={h} className="border-b" style={{ height: HOUR_H }} />
-              ))}
-
-              {/* 일정 오버레이 */}
-              {dayItems.map((it) => {
-                const top = it.startMin * MIN_PX;
-                const height = Math.max(16, (it.endMin - it.startMin) * MIN_PX);
-
-                return (
-                  <div
-                    key={it.id}
-                    className="bg-muted/60 absolute right-1 left-1 rounded-md border px-2 py-1 text-xs"
-                    style={{
-                      top,
-                      height,
-                      borderLeft: `4px solid ${it.color ?? "#3b82f6"}`,
-                    }}
-                    title={`${it.title} (${it.startMin}-${it.endMin})`}
-                  >
-                    <div className="line-clamp-2 font-medium">{it.title}</div>
-                  </div>
-                );
-              })}
-            </div>
+            <DayColumn
+              key={ymd}
+              date={ymd}
+              blocks={dayBlocks}
+              editingBlock={editingBlock}
+              onBlockDoubleClick={handleBlockDoubleClick}
+              onEmptyCellDoubleClick={(e) => handleEmptyCellDoubleClick(e, ymd)}
+              onEditingTitleChange={handleEditingTitleChange}
+              onEditingSave={handleEditingSave}
+              onEditingCancel={handleEditingCancel}
+            />
           );
         })}
       </div>
