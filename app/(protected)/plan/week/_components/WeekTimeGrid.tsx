@@ -26,6 +26,7 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
   }, [weekStartYmd]);
 
   // 빈 셀 더블클릭: 클릭 위치에서 시간 계산하여 새 블록 생성
+  // 단, 해당 시간대에 이미 일정이 있으면 새로 만들지 않음 (한 칸에 한 일정만)
   const handleEmptyCellDoubleClick = (
     e: React.MouseEvent<HTMLDivElement>,
     date: string
@@ -35,6 +36,18 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
     const clickedMin = Math.max(0, Math.min(1439, Math.round(relativeY / MIN_PX)));
     const startMin = clickedMin;
     const endMin = Math.min(1440, clickedMin + 60); // 기본 1시간
+
+    // 해당 날짜의 블록들 중 클릭한 시간대와 겹치는 블록이 있는지 확인
+    const dayBlocks = items.filter((it) => it.date?.startsWith(date));
+    const hasOverlap = dayBlocks.some((block) => {
+      // 겹치는 조건: (block.startMin < endMin) && (block.endMin > startMin)
+      return block.startMin < endMin && block.endMin > startMin;
+    });
+
+    // 이미 일정이 있으면 새로 만들지 않음
+    if (hasOverlap) {
+      return;
+    }
 
     setEditingBlock({
       id: null,

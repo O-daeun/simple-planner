@@ -27,6 +27,7 @@ export function DayColumn({
   onEditingCancel,
 }: Props) {
   const isEditingThisDay = editingBlock?.date === date;
+  const isNewBlock = editingBlock?.id === null;
 
   return (
     <div
@@ -45,11 +46,15 @@ export function DayColumn({
           block={block}
           onDoubleClick={onBlockDoubleClick}
           isEditing={editingBlock?.id === block.id}
+          editingTitle={editingBlock?.title ?? ""}
+          onEditingTitleChange={onEditingTitleChange}
+          onSave={onEditingSave}
+          onCancel={onEditingCancel}
         />
       ))}
 
-      {/* 편집 모드 */}
-      {isEditingThisDay && editingBlock && (
+      {/* 새 블록 편집 모드 (기존 블록이 아닌 경우에만) */}
+      {isEditingThisDay && isNewBlock && editingBlock && (
         <TimeBlockEditor
           block={editingBlock}
           onTitleChange={onEditingTitleChange}
