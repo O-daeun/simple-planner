@@ -11,7 +11,7 @@ type Props = {
   onCancel: () => void;
 };
 
-export function TimeBlockEditor({
+export default function TimeBlockEditor({
   block,
   onTitleChange,
   onSave,

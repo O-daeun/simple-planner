@@ -1,13 +1,10 @@
 "use client";
 
-import {
-  getThisWeekStartYmd,
-  kstYmdToDateValue,
-} from "@/lib/week";
+import { getThisWeekStartYmd, kstYmdToDateValue } from "@/lib/week";
 import { addDays, format } from "date-fns";
 import { useMemo, useState } from "react";
 import { HOUR_H, MIN_PX, TIME_COL_W } from "./constants";
-import { DayColumn } from "./DayColumn";
+import DayColumn from "./DayColumn";
 import type { EditingBlock, TimeBlock } from "./types";
 import { useTimeBlocks } from "./useTimeBlocks";
 
@@ -33,7 +30,10 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
   ) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const relativeY = e.clientY - rect.top;
-    const clickedMin = Math.max(0, Math.min(1439, Math.round(relativeY / MIN_PX)));
+    const clickedMin = Math.max(
+      0,
+      Math.min(1439, Math.round(relativeY / MIN_PX))
+    );
     const startMin = clickedMin;
     const endMin = Math.min(1440, clickedMin + 60); // 기본 1시간
 

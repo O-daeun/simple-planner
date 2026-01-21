@@ -14,7 +14,7 @@ type Props = {
   onCancel: () => void;
 };
 
-export function TimeBlockItem({
+export default function TimeBlockItem({
   block,
   onDoubleClick,
   isEditing,
@@ -67,7 +67,7 @@ export function TimeBlockItem({
         onChange={(e) => onEditingTitleChange(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
-        className="absolute right-1 left-1 rounded-md border-2 border-primary bg-background px-2 py-1 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-primary z-10"
+        className="border-primary bg-background focus:ring-primary absolute right-1 left-1 z-10 resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
         style={{
           top,
           height: Math.max(60, height),

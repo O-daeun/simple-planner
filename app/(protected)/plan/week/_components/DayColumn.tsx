@@ -1,9 +1,9 @@
 "use client";
 
 import { HOUR_H } from "./constants";
+import TimeBlockEditor from "./TimeBlockEditor";
+import TimeBlockItem from "./TimeBlockItem";
 import type { EditingBlock, TimeBlock } from "./types";
-import { TimeBlockEditor } from "./TimeBlockEditor";
-import { TimeBlockItem } from "./TimeBlockItem";
 
 type Props = {
   date: string; // YYYY-MM-DD
@@ -16,7 +16,7 @@ type Props = {
   onEditingCancel: () => void;
 };
 
-export function DayColumn({
+export default function DayColumn({
   date,
   blocks,
   editingBlock,
