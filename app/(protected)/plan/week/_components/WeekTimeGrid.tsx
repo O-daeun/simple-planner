@@ -78,6 +78,13 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
     }
   };
 
+  // 편집 중인 블록의 색상 변경
+  const handleEditingColorChange = (color: string | null) => {
+    if (editingBlock) {
+      setEditingBlock({ ...editingBlock, color });
+    }
+  };
+
   // 저장
   const handleEditingSave = async (title: string) => {
     if (!editingBlock) return;
@@ -94,7 +101,10 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
         });
       } else {
         // 기존 블록 수정
-        await updateBlock(editingBlock.id, { title });
+        await updateBlock(editingBlock.id, {
+          title,
+          color: editingBlock.color,
+        });
       }
       setEditingBlock(null);
     } catch (error) {
@@ -166,6 +176,7 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
               onBlockDoubleClick={handleBlockDoubleClick}
               onEmptyCellDoubleClick={(e) => handleEmptyCellDoubleClick(e, ymd)}
               onEditingTitleChange={handleEditingTitleChange}
+              onEditingColorChange={handleEditingColorChange}
               onEditingSave={handleEditingSave}
               onEditingCancel={handleEditingCancel}
             />
