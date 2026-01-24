@@ -28,8 +28,7 @@ export default function DayColumn({
   onEditingSave,
   onEditingCancel,
 }: Props) {
-  const isEditingThisDay = editingBlock?.date === date;
-  const isNewBlock = editingBlock?.id === null;
+  const isEditingThisDay = editingBlock?.date?.startsWith(date) ?? false;
 
   return (
     <div
@@ -42,23 +41,22 @@ export default function DayColumn({
       ))}
 
       {/* 일정 블록들 */}
-      {blocks.map((block) => (
-        <TimeBlockItem
-          key={block.id}
-          block={block}
-          onDoubleClick={onBlockDoubleClick}
-          isEditing={editingBlock?.id === block.id}
-          editingTitle={editingBlock?.title ?? ""}
-          editingColor={editingBlock?.color ?? null}
-          onEditingTitleChange={onEditingTitleChange}
-          onEditingColorChange={onEditingColorChange}
-          onSave={onEditingSave}
-          onCancel={onEditingCancel}
-        />
-      ))}
+      {blocks.map((block) => {
+        const isEditingBlock = editingBlock?.id === block.id;
+        console.log(isEditingBlock);
+        if (isEditingBlock) return null;
 
-      {/* 새 블록 편집 모드 (기존 블록이 아닌 경우에만) */}
-      {isEditingThisDay && isNewBlock && editingBlock && (
+        return (
+          <TimeBlockItem
+            key={block.id}
+            block={block}
+            onDoubleClick={onBlockDoubleClick}
+          />
+        );
+      })}
+
+      {/* 편집 모드(새 블록/기존 블록 공통) */}
+      {isEditingThisDay && editingBlock && (
         <TimeBlockEditor
           block={editingBlock}
           onTitleChange={onEditingTitleChange}

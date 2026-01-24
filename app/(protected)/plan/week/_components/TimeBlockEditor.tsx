@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MIN_PX } from "./constants";
 import ColorPicker from "./ColorPicker";
+import { MIN_PX } from "./constants";
 import type { EditingBlock } from "./types";
 
 type Props = {
@@ -22,6 +22,7 @@ export default function TimeBlockEditor({
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -30,18 +31,15 @@ export default function TimeBlockEditor({
     }
   }, []);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSave();
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      onCancel();
-    }
-    // Shift + Enter는 기본 동작(줄바꿈) 그대로
+  const commitCancel = () => {
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
+    onCancel();
   };
 
-  const handleSave = () => {
+  const commitSave = () => {
+    if (hasSubmittedRef.current) return;
+    hasSubmittedRef.current = true;
     const trimmedTitle = block.title.trim();
     if (trimmedTitle) {
       onSave(trimmedTitle);
@@ -50,14 +48,31 @@ export default function TimeBlockEditor({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      commitSave();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      commitCancel();
+    }
+    // Shift + Enter는 기본 동작(줄바꿈) 그대로
+  };
+
   const top = block.startMin * MIN_PX;
   const height = Math.max(60, (block.endMin - block.startMin) * MIN_PX);
   const currentColor = block.color ?? "#E5E7EB";
   const isDarkColor =
     currentColor !== null &&
-    ["#6B7280", "#DC2626", "#EA580C", "#CA8A04", "#16A34A", "#2563EB", "#7C3AED"].includes(
-      currentColor
-    );
+    [
+      "#6B7280",
+      "#DC2626",
+      "#EA580C",
+      "#CA8A04",
+      "#16A34A",
+      "#2563EB",
+      "#7C3AED",
+    ].includes(currentColor);
   const textColor = isDarkColor ? "#FFFFFF" : "#1F2937";
 
   return (
@@ -70,21 +85,21 @@ export default function TimeBlockEditor({
             e.stopPropagation();
             setShowColorPicker(!showColorPicker);
           }}
-          className="flex h-6 w-6 items-center justify-center rounded border bg-background text-xs hover:bg-muted"
+          className="bg-background hover:bg-muted flex h-6 w-6 items-center justify-center rounded border text-xs"
           title="색"
         >
           🎨
         </button>
         <button
           type="button"
-          className="flex h-6 w-6 items-center justify-center rounded border bg-background text-xs hover:bg-muted"
+          className="bg-background hover:bg-muted flex h-6 w-6 items-center justify-center rounded border text-xs"
           title="반복"
         >
           🔁
         </button>
         <button
           type="button"
-          className="flex h-6 w-6 items-center justify-center rounded border bg-background text-xs hover:bg-muted"
+          className="bg-background hover:bg-muted flex h-6 w-6 items-center justify-center rounded border text-xs"
           title="삭제"
         >
           🗑
@@ -93,7 +108,7 @@ export default function TimeBlockEditor({
       {/* 색상 선택 UI */}
       {showColorPicker && (
         <ColorPicker
-          selectedColor={block.color}
+          selectedColor={block.color ?? null}
           onSelectColor={onColorChange}
           onClose={() => setShowColorPicker(false)}
         />
@@ -104,8 +119,8 @@ export default function TimeBlockEditor({
         value={block.title}
         onChange={(e) => onTitleChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={handleSave}
-        className="border-primary absolute resize-none rounded-md border-2 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+        onBlur={commitSave}
+        className="border-primary focus:ring-primary absolute resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
         style={{
           top: 28,
           width: "calc(100% - 0.5rem)",
