@@ -78,6 +78,7 @@ export async function PATCH(req: Request, { params }: Params) {
   // ✅ update data 만들기 (보낸 것만 반영)
   const data: Record<string, any> = {};
 
+  let nextDate = existing.date;
   if (body.date !== undefined) {
     if (!body.date || !isValidDateOnlyString(body.date)) {
       return NextResponse.json(
@@ -85,7 +86,8 @@ export async function PATCH(req: Request, { params }: Params) {
         { status: 400 }
       );
     }
-    data.date = toDateOnly(body.date);
+    nextDate = toDateOnly(body.date);
+    data.date = nextDate;
   }
 
   if (body.title !== undefined) {
@@ -161,6 +163,31 @@ export async function PATCH(req: Request, { params }: Params) {
       return NextResponse.json(
         { message: "startMin must be less than endMin" },
         { status: 400 }
+      );
+    }
+  }
+
+  const shouldCheckOverlap =
+    body.date !== undefined ||
+    body.startMin !== undefined ||
+    body.endMin !== undefined;
+
+  if (shouldCheckOverlap) {
+    const overlap = await prisma.timeBlock.findFirst({
+      where: {
+        userId: guard.userId,
+        date: nextDate,
+        id: { not: id },
+        startMin: { lt: nextEndMin },
+        endMin: { gt: nextStartMin },
+      },
+      select: { id: true },
+    });
+
+    if (overlap) {
+      return NextResponse.json(
+        { message: "Time block overlaps with an existing block" },
+        { status: 409 }
       );
     }
   }

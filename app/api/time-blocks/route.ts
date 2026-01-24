@@ -133,6 +133,23 @@ export async function POST(req: Request) {
   // Prisma @db.Date 컬럼: 날짜만 의미 있게 저장/비교됨
   const dateObj = toDateOnly(date);
 
+  const overlap = await prisma.timeBlock.findFirst({
+    where: {
+      userId: guard.userId,
+      date: dateObj,
+      startMin: { lt: endMin },
+      endMin: { gt: startMin },
+    },
+    select: { id: true },
+  });
+
+  if (overlap) {
+    return NextResponse.json(
+      { message: "Time block overlaps with an existing block" },
+      { status: 409 }
+    );
+  }
+
   const created = await prisma.timeBlock.create({
     data: {
       userId: guard.userId,
