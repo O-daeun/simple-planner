@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import ColorPicker from "./ColorPicker";
+import { useEffect, useRef } from "react";
 import { MIN_PX } from "./constants";
+import TimeBlockEditorToolbar from "./TimeBlockEditorToolbar";
 import type { EditingBlock } from "./types";
 
 type Props = {
@@ -20,7 +20,6 @@ export default function TimeBlockEditor({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
@@ -102,42 +101,7 @@ export default function TimeBlockEditor({
       className="absolute right-1 left-1 z-10"
       style={{ top }}
     >
-      {/* 색/반복/삭제 아이콘 영역 */}
-      <div className="absolute top-0 mb-1 flex gap-1">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowColorPicker(!showColorPicker);
-          }}
-          className="bg-background hover:bg-muted flex h-6 w-6 items-center justify-center rounded border text-xs"
-          title="색"
-        >
-          🎨
-        </button>
-        <button
-          type="button"
-          className="bg-background hover:bg-muted flex h-6 w-6 items-center justify-center rounded border text-xs"
-          title="반복"
-        >
-          🔁
-        </button>
-        <button
-          type="button"
-          className="bg-background hover:bg-muted flex h-6 w-6 items-center justify-center rounded border text-xs"
-          title="삭제"
-        >
-          🗑
-        </button>
-      </div>
-      {/* 색상 선택 UI */}
-      {showColorPicker && (
-        <ColorPicker
-          selectedColor={block.color ?? null}
-          onSelectColor={(color) => onChange({ color })}
-          onClose={() => setShowColorPicker(false)}
-        />
-      )}
+      <TimeBlockEditorToolbar block={block} onChange={onChange} />
       {/* 텍스트 입력 영역 */}
       <textarea
         ref={textareaRef}
