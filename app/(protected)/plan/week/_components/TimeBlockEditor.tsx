@@ -20,6 +20,7 @@ export default function TimeBlockEditor({
   onSave,
   onCancel,
 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const hasSubmittedRef = useRef(false);
@@ -29,6 +30,27 @@ export default function TimeBlockEditor({
       textareaRef.current.focus();
       textareaRef.current.select();
     }
+  }, []);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (hasSubmittedRef.current) return;
+      const target = event.target as Node | null;
+      if (
+        containerRef.current &&
+        target &&
+        !containerRef.current.contains(target)
+      ) {
+        commitSave();
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
   }, []);
 
   const commitCancel = () => {
@@ -76,9 +98,13 @@ export default function TimeBlockEditor({
   const textColor = isDarkColor ? "#FFFFFF" : "#1F2937";
 
   return (
-    <div className="absolute right-1 left-1 z-10" style={{ top }}>
+    <div
+      ref={containerRef}
+      className="absolute right-1 left-1 z-10"
+      style={{ top }}
+    >
       {/* 색/반복/삭제 아이콘 영역 */}
-      <div className="mb-1 flex gap-1">
+      <div className="absolute top-0 mb-1 flex gap-1">
         <button
           type="button"
           onClick={(e) => {
@@ -119,7 +145,6 @@ export default function TimeBlockEditor({
         value={block.title}
         onChange={(e) => onTitleChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={commitSave}
         className="border-primary focus:ring-primary absolute resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
         style={{
           top: 28,
