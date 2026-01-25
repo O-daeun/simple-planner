@@ -7,16 +7,14 @@ import type { EditingBlock } from "./types";
 
 type Props = {
   block: EditingBlock;
-  onTitleChange: (title: string) => void;
-  onColorChange: (color: string | null) => void;
+  onChange: (patch: Partial<EditingBlock>) => void;
   onSave: (title: string) => void;
   onCancel: () => void;
 };
 
 export default function TimeBlockEditor({
   block,
-  onTitleChange,
-  onColorChange,
+  onChange,
   onSave,
   onCancel,
 }: Props) {
@@ -32,6 +30,7 @@ export default function TimeBlockEditor({
     }
   }, []);
 
+  // 텍스트 영역 외부 클릭 시 저장
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       if (hasSubmittedRef.current) return;
@@ -135,7 +134,7 @@ export default function TimeBlockEditor({
       {showColorPicker && (
         <ColorPicker
           selectedColor={block.color ?? null}
-          onSelectColor={onColorChange}
+          onSelectColor={(color) => onChange({ color })}
           onClose={() => setShowColorPicker(false)}
         />
       )}
@@ -143,7 +142,7 @@ export default function TimeBlockEditor({
       <textarea
         ref={textareaRef}
         value={block.title}
-        onChange={(e) => onTitleChange(e.target.value)}
+        onChange={(e) => onChange({ title: e.target.value })}
         onKeyDown={handleKeyDown}
         className="border-primary focus:ring-primary absolute resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
         style={{

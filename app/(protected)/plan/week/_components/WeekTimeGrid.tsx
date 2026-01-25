@@ -71,18 +71,13 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
     });
   };
 
-  // 편집 중인 블록의 제목 변경
-  const handleEditingTitleChange = (title: string) => {
-    if (editingBlock) {
-      setEditingBlock({ ...editingBlock, title });
-    }
+  const updateEditingBlock = (patch: Partial<EditingBlock>) => {
+    setEditingBlock((prev) => (prev ? { ...prev, ...patch } : prev));
   };
 
-  // 편집 중인 블록의 색상 변경
-  const handleEditingColorChange = (color: string | null) => {
-    if (editingBlock) {
-      setEditingBlock({ ...editingBlock, color });
-    }
+  // 편집 중인 블록 변경
+  const handleEditingChange = (patch: Partial<EditingBlock>) => {
+    updateEditingBlock(patch);
   };
 
   // 저장
@@ -175,8 +170,7 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
               editingBlock={editingBlock}
               onBlockDoubleClick={handleBlockDoubleClick}
               onEmptyCellDoubleClick={(e) => handleEmptyCellDoubleClick(e, ymd)}
-              onEditingTitleChange={handleEditingTitleChange}
-              onEditingColorChange={handleEditingColorChange}
+              onEditingChange={handleEditingChange}
               onEditingSave={handleEditingSave}
               onEditingCancel={handleEditingCancel}
             />

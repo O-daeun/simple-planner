@@ -11,8 +11,7 @@ type Props = {
   editingBlock: EditingBlock | null;
   onBlockDoubleClick: (block: TimeBlock) => void;
   onEmptyCellDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onEditingTitleChange: (title: string) => void;
-  onEditingColorChange: (color: string | null) => void;
+  onEditingChange: (patch: Partial<EditingBlock>) => void;
   onEditingSave: (title: string) => void;
   onEditingCancel: () => void;
 };
@@ -23,8 +22,7 @@ export default function DayColumn({
   editingBlock,
   onBlockDoubleClick,
   onEmptyCellDoubleClick,
-  onEditingTitleChange,
-  onEditingColorChange,
+  onEditingChange,
   onEditingSave,
   onEditingCancel,
 }: Props) {
@@ -59,8 +57,7 @@ export default function DayColumn({
       {isEditingThisDay && editingBlock && (
         <TimeBlockEditor
           block={editingBlock}
-          onTitleChange={onEditingTitleChange}
-          onColorChange={onEditingColorChange}
+          onChange={onEditingChange}
           onSave={onEditingSave}
           onCancel={onEditingCancel}
         />
