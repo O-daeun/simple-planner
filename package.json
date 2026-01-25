@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "clear:schedule": "node scripts/clear-schedule.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
