@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ColorPicker from "./ColorPicker";
+import { COLOR_PALETTE } from "./colorPalette";
 import type { EditingBlock } from "./types";
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
 
 export default function TimeBlockEditorToolbar({ block, onChange }: Props) {
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const selectedColor =
+    COLOR_PALETTE.find((entry) => entry.bg === block.color) ?? null;
 
   return (
     <>
@@ -45,8 +48,8 @@ export default function TimeBlockEditorToolbar({ block, onChange }: Props) {
       {/* 색상 선택 UI */}
       {showColorPicker && (
         <ColorPicker
-          selectedColor={block.color ?? null}
-          onSelectColor={(color) => onChange({ color })}
+          selectedColor={selectedColor}
+          onSelectColor={(color) => onChange({ color: color?.bg ?? null })}
           onClose={() => setShowColorPicker(false)}
         />
       )}

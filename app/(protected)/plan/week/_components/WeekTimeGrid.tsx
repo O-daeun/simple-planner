@@ -3,6 +3,7 @@
 import { getThisWeekStartYmd, kstYmdToDateValue } from "@/lib/week";
 import { addDays, format } from "date-fns";
 import { useMemo, useState } from "react";
+import { DEFAULT_PALETTE_COLOR } from "./colorPalette";
 import { HOUR_H, MIN_PX, TIME_COL_W } from "./constants";
 import DayColumn from "./DayColumn";
 import type { EditingBlock, TimeBlock } from "./types";
@@ -67,7 +68,7 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
       startMin: block.startMin,
       endMin: block.endMin,
       title: block.title,
-      color: block.color ?? null,
+      color: block.color ?? DEFAULT_PALETTE_COLOR.bg,
     });
   };
 

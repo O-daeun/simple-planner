@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getPaletteEntry } from "./colorPalette";
 import { MIN_PX } from "./constants";
 import TimeBlockEditorToolbar from "./TimeBlockEditorToolbar";
 import type { EditingBlock } from "./types";
@@ -22,6 +23,7 @@ export default function TimeBlockEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const hasSubmittedRef = useRef(false);
 
+  // editor 진입 시 텍스트 영역 포커스
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.focus();
@@ -29,7 +31,7 @@ export default function TimeBlockEditor({
     }
   }, []);
 
-  // 텍스트 영역 외부 클릭 시 저장
+  // editor 외부 클릭 시 저장
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       if (hasSubmittedRef.current) return;
@@ -80,20 +82,7 @@ export default function TimeBlockEditor({
   };
 
   const top = block.startMin * MIN_PX;
-  const height = Math.max(60, (block.endMin - block.startMin) * MIN_PX);
-  const currentColor = block.color ?? "#E5E7EB";
-  const isDarkColor =
-    currentColor !== null &&
-    [
-      "#6B7280",
-      "#DC2626",
-      "#EA580C",
-      "#CA8A04",
-      "#16A34A",
-      "#2563EB",
-      "#7C3AED",
-    ].includes(currentColor);
-  const textColor = isDarkColor ? "#FFFFFF" : "#1F2937";
+  const height = Math.max(16, (block.endMin - block.startMin) * MIN_PX);
 
   return (
     <div
@@ -108,14 +97,11 @@ export default function TimeBlockEditor({
         value={block.title}
         onChange={(e) => onChange({ title: e.target.value })}
         onKeyDown={handleKeyDown}
-        className="border-primary focus:ring-primary absolute resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
+        className="border-primary focus:ring-primary absolute top-7 w-[calc(100%-0.5rem)] resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
         style={{
-          top: 28,
-          width: "calc(100% - 0.5rem)",
           height,
-          borderLeft: `4px solid ${currentColor}`,
-          backgroundColor: currentColor,
-          color: textColor,
+          backgroundColor: getPaletteEntry(block.color).bg,
+          color: getPaletteEntry(block.color).text,
         }}
       />
     </div>

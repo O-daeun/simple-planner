@@ -1,10 +1,11 @@
 "use client";
 
+import type { PaletteColor } from "./colorPalette";
 import { COLOR_PALETTE } from "./colorPalette";
 
 type Props = {
-  selectedColor: string | null;
-  onSelectColor: (color: string | null) => void;
+  selectedColor: PaletteColor | null;
+  onSelectColor: (color: PaletteColor | null) => void;
   onClose: () => void;
 };
 
@@ -18,14 +19,13 @@ export default function ColorPicker({
       <div className="mb-2 text-xs font-medium">색 선택</div>
       <div className="grid grid-cols-7 gap-2">
         {COLOR_PALETTE.map((color, idx) => {
-          const colorValue = color.bg;
-          const isSelected = selectedColor === colorValue;
+          const isSelected = selectedColor?.bg === color.bg;
           return (
             <button
               key={idx}
               type="button"
               onClick={() => {
-                onSelectColor(colorValue);
+                onSelectColor(color);
                 onClose();
               }}
               className={`h-6 w-6 rounded-full border-2 transition-all ${
