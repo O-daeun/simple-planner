@@ -2,14 +2,15 @@
 
 import { getPaletteEntry } from "./colorPalette";
 import { MIN_PX } from "./constants";
+import { useEditingBlockContext } from "./EditingBlockContext";
 import type { TimeBlock } from "./types";
 
 type Props = {
   block: TimeBlock;
-  onDoubleClick: (block: TimeBlock) => void;
 };
 
-export default function TimeBlockItem({ block, onDoubleClick }: Props) {
+export default function TimeBlockItem({ block }: Props) {
+  const { openEditBlock } = useEditingBlockContext();
   const top = block.startMin * MIN_PX;
   const height = Math.max(16, (block.endMin - block.startMin) * MIN_PX);
 
@@ -25,7 +26,7 @@ export default function TimeBlockItem({ block, onDoubleClick }: Props) {
       title={`${block.title} (${block.startMin}-${block.endMin})`}
       onDoubleClick={(e) => {
         e.stopPropagation();
-        onDoubleClick(block);
+        openEditBlock(block);
       }}
     >
       <div className="line-clamp-2 font-medium">{block.title}</div>

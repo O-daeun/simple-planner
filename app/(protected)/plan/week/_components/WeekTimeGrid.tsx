@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { DEFAULT_PALETTE_COLOR } from "./colorPalette";
 import { HOUR_H, MIN_PX, TIME_COL_W } from "./constants";
 import DayColumn from "./DayColumn";
+import { EditingBlockProvider } from "./EditingBlockContext";
 import type { EditingBlock, TimeBlock } from "./types";
 import { useTimeBlocks } from "./useTimeBlocks";
 
@@ -76,11 +77,6 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
     setEditingBlock((prev) => (prev ? { ...prev, ...patch } : prev));
   };
 
-  // 편집 중인 블록 변경
-  const handleEditingChange = (patch: Partial<EditingBlock>) => {
-    updateEditingBlock(patch);
-  };
-
   // 저장
   const handleEditingSave = async (title: string) => {
     if (!editingBlock) return;
@@ -116,68 +112,67 @@ export default function WeekTimeGrid({ weekStartYmd }: Props) {
   };
 
   return (
-    <div className="overflow-hidden rounded-md border">
-      {/* 상단 헤더 */}
-      <div
-        className="bg-background grid border-b"
-        style={{
-          gridTemplateColumns: `${TIME_COL_W}px repeat(7, minmax(0, 1fr))`,
-        }}
-      >
-        <div className="border-r" />
-        {days.map((d) => (
-          <div
-            key={format(d, "yyyy-MM-dd")}
-            className="border-r p-2 text-sm last:border-r-0"
-          >
-            <div className="font-medium">{format(d, "EEE")}</div>
-            <div className="text-muted-foreground">{format(d, "M/d")}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* 본문(시간축 + 그리드 + 일정 오버레이) */}
-      <div
-        className="relative grid"
-        style={{
-          gridTemplateColumns: `${TIME_COL_W}px repeat(7, minmax(0, 1fr))`,
-        }}
-      >
-        {/* 좌측 시간 라벨 */}
-        <div className="border-r">
-          {Array.from({ length: 24 }, (_, h) => (
+    <EditingBlockProvider
+      value={{
+        editingBlock,
+        openEmptyCellEditor: handleEmptyCellDoubleClick,
+        openEditBlock: handleBlockDoubleClick,
+        updateEditingBlock,
+        saveEditingBlock: handleEditingSave,
+        cancelEditingBlock: handleEditingCancel,
+      }}
+    >
+      <div className="overflow-hidden rounded-md border">
+        {/* 상단 헤더 */}
+        <div
+          className="bg-background grid border-b"
+          style={{
+            gridTemplateColumns: `${TIME_COL_W}px repeat(7, minmax(0, 1fr))`,
+          }}
+        >
+          <div className="border-r" />
+          {days.map((d) => (
             <div
-              key={h}
-              className="text-muted-foreground relative text-xs"
-              style={{ height: HOUR_H }}
+              key={format(d, "yyyy-MM-dd")}
+              className="border-r p-2 text-sm last:border-r-0"
             >
-              <span className="absolute -top-2 right-2">
-                {String(h).padStart(2, "0")}:00
-              </span>
+              <div className="font-medium">{format(d, "EEE")}</div>
+              <div className="text-muted-foreground">{format(d, "M/d")}</div>
             </div>
           ))}
         </div>
 
-        {/* 7일 컬럼들 */}
-        {days.map((d) => {
-          const ymd = format(d, "yyyy-MM-dd");
-          const dayBlocks = items.filter((it) => it.date?.startsWith(ymd));
+        {/* 본문(시간축 + 그리드 + 일정 오버레이) */}
+        <div
+          className="relative grid"
+          style={{
+            gridTemplateColumns: `${TIME_COL_W}px repeat(7, minmax(0, 1fr))`,
+          }}
+        >
+          {/* 좌측 시간 라벨 */}
+          <div className="border-r">
+            {Array.from({ length: 24 }, (_, h) => (
+              <div
+                key={h}
+                className="text-muted-foreground relative text-xs"
+                style={{ height: HOUR_H }}
+              >
+                <span className="absolute -top-2 right-2">
+                  {String(h).padStart(2, "0")}:00
+                </span>
+              </div>
+            ))}
+          </div>
 
-          return (
-            <DayColumn
-              key={ymd}
-              date={ymd}
-              blocks={dayBlocks}
-              editingBlock={editingBlock}
-              onBlockDoubleClick={handleBlockDoubleClick}
-              onEmptyCellDoubleClick={(e) => handleEmptyCellDoubleClick(e, ymd)}
-              onEditingChange={handleEditingChange}
-              onEditingSave={handleEditingSave}
-              onEditingCancel={handleEditingCancel}
-            />
-          );
-        })}
+          {/* 7일 컬럼들 */}
+          {days.map((d) => {
+            const ymd = format(d, "yyyy-MM-dd");
+            const dayBlocks = items.filter((it) => it.date?.startsWith(ymd));
+
+            return <DayColumn key={ymd} date={ymd} blocks={dayBlocks} />;
+          })}
+        </div>
       </div>
-    </div>
+    </EditingBlockProvider>
   );
 }
