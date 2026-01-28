@@ -15,7 +15,7 @@ export default function ColorPicker({
   onClose,
 }: Props) {
   return (
-    <div className="bg-background absolute -top-20 left-0 z-20 rounded-md border p-3 shadow-lg">
+    <div className="bg-background absolute bottom-0 left-0 z-20 rounded-md border p-3 shadow-lg">
       <div className="mb-2 text-xs font-medium">색 선택</div>
       <div className="grid grid-cols-7 gap-2">
         {COLOR_PALETTE.map((color, idx) => {
@@ -37,16 +37,6 @@ export default function ColorPicker({
           );
         })}
       </div>
-      <button
-        type="button"
-        onClick={() => {
-          onSelectColor(null);
-          onClose();
-        }}
-        className="hover:bg-muted mt-2 w-full rounded border px-2 py-1 text-xs"
-      >
-        기본값
-      </button>
     </div>
   );
 }

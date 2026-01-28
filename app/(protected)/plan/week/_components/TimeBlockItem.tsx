@@ -1,7 +1,7 @@
 "use client";
 
 import { getPaletteEntry } from "./colorPalette";
-import { MIN_PX } from "./constants";
+import { minToPx } from "./constants";
 import { useEditingBlockContext } from "./EditingBlockContext";
 import type { TimeBlock } from "./types";
 
@@ -11,8 +11,8 @@ type Props = {
 
 export default function TimeBlockItem({ block }: Props) {
   const { openEditBlock } = useEditingBlockContext();
-  const top = block.startMin * MIN_PX;
-  const height = Math.max(16, (block.endMin - block.startMin) * MIN_PX);
+  const top = minToPx(block.startMin);
+  const height = Math.max(16, minToPx(block.endMin) - top);
 
   return (
     <div

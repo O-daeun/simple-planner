@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { getPaletteEntry } from "./colorPalette";
-import { MIN_PX } from "./constants";
+import { minToPx } from "./constants";
 import TimeBlockEditorToolbar from "./TimeBlockEditorToolbar";
 import type { EditingBlock } from "./types";
 
@@ -81,8 +81,8 @@ export default function TimeBlockEditor({
     // Shift + Enter는 기본 동작(줄바꿈) 그대로
   };
 
-  const top = block.startMin * MIN_PX;
-  const height = Math.max(16, (block.endMin - block.startMin) * MIN_PX);
+  const top = minToPx(block.startMin);
+  const height = Math.max(16, minToPx(block.endMin) - top);
 
   return (
     <div
@@ -97,7 +97,7 @@ export default function TimeBlockEditor({
         value={block.title}
         onChange={(e) => onChange({ title: e.target.value })}
         onKeyDown={handleKeyDown}
-        className="border-primary focus:ring-primary absolute top-7 w-[calc(100%-0.5rem)] resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
+        className="border-primary focus:ring-primary w-[calc(100%-0.5rem)] resize-none rounded-md border-2 px-2 py-1 text-xs focus:ring-2 focus:outline-none"
         style={{
           height,
           backgroundColor: getPaletteEntry(block.color).bg,

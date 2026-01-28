@@ -16,9 +16,9 @@ export default function TimeBlockEditorToolbar({ block, onChange }: Props) {
     COLOR_PALETTE.find((entry) => entry.bg === block.color) ?? null;
 
   return (
-    <>
+    <div className="relative">
       {/* 색/반복/삭제 아이콘 영역 */}
-      <div className="absolute top-0 mb-1 flex gap-1">
+      <div className="absolute bottom-0 mb-1 flex gap-1">
         <button
           type="button"
           onClick={(e) => {
@@ -53,6 +53,6 @@ export default function TimeBlockEditorToolbar({ block, onChange }: Props) {
           onClose={() => setShowColorPicker(false)}
         />
       )}
-    </>
+    </div>
   );
 }
